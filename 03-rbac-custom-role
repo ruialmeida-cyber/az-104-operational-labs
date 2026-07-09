@@ -1,0 +1,190 @@
+# Lab 3 – Custom Azure RBAC Role
+
+## Objective
+
+Create a custom Azure RBAC role scoped to the `rg-az104-labs` resource group.
+
+The role provides limited permissions for Azure virtual machine operations without granting unnecessary administrative privileges.
+
+This lab demonstrates the fundamentals of Azure Role-Based Access Control (RBAC), including:
+
+- Creating a custom RBAC role
+- Selecting specific permissions
+- Applying least privilege principles
+- Restricting role scope
+- Validating the role using Azure CLI
+
+---
+
+# Environment
+
+| Resource | Value |
+|---|---|
+| Resource Group | rg-az104-labs |
+| Role Type | Custom Azure RBAC Role |
+| Scope | Resource Group |
+
+---
+
+# Custom Role
+
+## Role Name
+
+`Lab VM Operator`
+
+## Description
+
+Custom role for AZ-104 lab with limited virtual machine permissions.
+
+---
+
+# Permissions Granted
+
+The custom role contains three Azure RBAC actions.
+
+## 1. Read Virtual Machines
+
+Permission:
+
+```
+Microsoft.Compute/virtualMachines/read
+```
+
+Purpose:
+
+Allows viewing virtual machine properties.
+
+---
+
+## 2. Start Virtual Machines
+
+Permission:
+
+```
+Microsoft.Compute/virtualMachines/start/action
+```
+
+Purpose:
+
+Allows starting Azure virtual machines.
+
+---
+
+## 3. Read Resource Groups
+
+Permission:
+
+```
+Microsoft.Resources/subscriptions/resourceGroups/read
+```
+
+Purpose:
+
+Allows reading resource group information.
+
+---
+
+# Assignable Scope
+
+The custom role was restricted to:
+
+```
+/subscriptions/<subscription-id>/resourceGroups/rg-az104-labs
+```
+
+Scope:
+
+```
+Resource Group
+```
+
+Restricting the scope prevents this custom role from being available across the entire Azure subscription.
+
+---
+
+# Least Privilege Design
+
+The role was intentionally designed with limited permissions.
+
+## Allowed Actions
+
+- Read virtual machine properties
+- Start virtual machines
+- Read resource group information
+
+## Actions Not Granted
+
+The role does not allow:
+
+- Creating resources
+- Deleting resources
+- Modifying virtual machines
+- Restarting virtual machines
+- Stopping virtual machines
+- Assigning Azure roles
+- Managing permissions
+
+---
+
+# JSON Permission Definition
+
+The resulting permission definition:
+
+```json
+{
+    "actions": [
+        "Microsoft.Compute/virtualMachines/read",
+        "Microsoft.Compute/virtualMachines/start/action",
+        "Microsoft.Resources/subscriptions/resourceGroups/read"
+    ],
+    "notActions": [],
+    "dataActions": [],
+    "notDataActions": []
+}
+```
+
+---
+
+# Azure CLI Validation
+
+The custom role was validated using Azure CLI:
+
+```bash
+az role definition list --name "Lab VM Operator" --output table
+```
+
+Output:
+
+```
+Name             Type                                     Description
+---------------  ---------------------------------------  --------------------------------------------------------------------
+Lab VM Operator  Microsoft.Authorization/roleDefinitions  Custom role for AZ-104 lab with limited virtual machine permissions.
+```
+
+---
+
+# Skills Demonstrated
+
+- Azure RBAC custom role creation
+- Permission-level access control
+- Resource group scope restriction
+- Least privilege implementation
+- Azure CLI validation
+
+---
+
+# Lab Outcome
+
+Successfully created a custom Azure RBAC role named:
+
+```
+Lab VM Operator
+```
+
+The role was scoped to:
+
+```
+rg-az104-labs
+```
+
+and validated using Azure CLI.
