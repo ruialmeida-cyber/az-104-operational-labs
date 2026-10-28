@@ -1,0 +1,235 @@
+# Lab 03 — Microsoft Entra ID Identity Investigation
+
+## Overview
+
+This operational lab investigates Microsoft Entra ID identities using the Azure Portal, Azure CLI, and Microsoft Graph.
+
+Building on the previous identity and access management exercise, this lab focuses on validating tenant identity data, examining member and guest accounts, inspecting device inventory, and comparing portal configuration with command-line evidence.
+
+The workflow reflects practical cloud administration and security investigation techniques.
+
+## Objectives
+
+* Review Azure role-based access control (RBAC) configuration.
+* Validate Azure CLI authentication and subscription context.
+* Query Microsoft Entra ID users through Microsoft Graph.
+* Identify internal member and external guest identities.
+* Inspect the tenant's registered device inventory.
+* Compare identity information obtained through the portal and API.
+* Document findings and environmental limitations.
+
+## Environment
+
+| Component         | Configuration                   |
+| ----------------- | ------------------------------- |
+| Cloud platform    | Microsoft Azure                 |
+| Identity provider | Microsoft Entra ID              |
+| Azure CLI         | 2.87.0                          |
+| Local environment | Windows 11 with WSL2 and Ubuntu |
+| API               | Microsoft Graph                 |
+| Region            | West Europe                     |
+| Interface         | Azure Portal and Azure CLI      |
+
+*Version information and environment details reflect the lab configuration at the time of execution.*
+
+---
+
+## Part 1 — Azure Portal: RBAC Configuration
+
+### Step 1 — Create a Security Group
+
+A Microsoft Entra ID security group was created to centralise permission management and support group-based access control.
+
+### Step 2 — Add a User to the Group
+
+The lab user was added to the security group, allowing membership to be managed centrally.
+
+### Step 3 — Assign RBAC Permissions
+
+The following configuration was applied:
+
+| Setting           | Configuration  |
+| ----------------- | -------------- |
+| Scope             | Resource group |
+| Role              | Reader         |
+| Assignment target | Security group |
+
+The Reader role provides visibility into resources within the assigned scope without granting permission to modify them.
+
+### Result
+
+The group-based role assignment was configured at resource group scope. The effective access of individual users depends on the applicable role assignment, group membership, and scope.
+
+---
+
+## Part 2 — Azure CLI: Authentication Validation
+
+### Step 1 — Verify the Active Azure Context
+
+**Command**
+
+```bash
+az account show
+```
+
+This command returns information about the active Azure subscription, tenant, cloud environment, and authenticated account.
+
+**Validation points**
+
+* The expected Azure cloud environment is active.
+* The intended subscription is selected.
+* The expected tenant is associated with the session.
+* The subscription is enabled.
+* The authenticated account is the intended lab identity.
+
+**Finding**
+
+Azure CLI authentication was successful. The returned account context confirmed the active subscription and tenant.
+
+*Sensitive identifiers and personal account information have been omitted from this public documentation.*
+
+---
+
+## Part 3 — Microsoft Graph: User Enumeration
+
+### Step 1 — Query Tenant Users
+
+**Command**
+
+```bash
+az rest --method GET --url "https://graph.microsoft.com/v1.0/users"
+```
+
+This request queries the Microsoft Graph users endpoint using the Azure CLI authentication context.
+
+The query requires the signed-in identity to have appropriate Microsoft Graph permissions. Successful Azure CLI authentication alone does not guarantee access to every Graph resource.
+
+### Observed Results
+
+The query returned two user objects in the lab output:
+
+* An internal member account used for the lab.
+* An external guest account represented using the Microsoft Entra ID guest account naming convention.
+
+Guest user principal names can contain the `#EXT#` convention. This is a useful indicator when investigating external identities, but identity classification should be validated against the account's actual properties rather than relying on the name alone.
+
+### Finding
+
+Microsoft Graph successfully returned user information from the tenant.
+
+This demonstrated that identity data could be inspected programmatically rather than exclusively through the Azure Portal.
+
+---
+
+## Part 4 — Microsoft Graph: Device Inventory
+
+### Step 1 — Query Registered Devices
+
+**Command**
+
+```bash
+az rest --method GET --url "https://graph.microsoft.com/v1.0/devices"
+```
+
+This request queries the Microsoft Graph devices endpoint.
+
+The query requires appropriate Microsoft Graph permissions to access device information.
+
+### Observed Result
+
+The response returned an empty `value` array:
+
+```json
+{
+  "value": []
+}
+```
+
+### Finding
+
+The query returned no device objects visible through the request at the time of testing.
+
+This result does not, by itself, establish why no devices were returned. The result should be interpreted in the context of the tenant, query permissions, and the inventory being investigated.
+
+---
+
+## Part 5 — Device Registration Investigation
+
+An attempt was made to register a Windows 11 device with Microsoft Entra ID.
+
+Device registration could not be completed within the available lab environment because the necessary prerequisites were not available.
+
+Rather than forcing an unsupported configuration, the investigation continued by validating tenant identity information through Azure CLI and Microsoft Graph.
+
+### Architectural Distinction
+
+Three related but separate areas were considered:
+
+* **Microsoft Entra ID:** Identity and directory management.
+* **Azure RBAC:** Authorisation for Azure resource operations.
+* **Device registration and management:** Device identity and associated trust or management capabilities.
+
+These layers interact, but success in one does not guarantee that the others are configured or operational.
+
+---
+
+## Findings Summary
+
+| Investigation area                     | Result                                     |
+| -------------------------------------- | ------------------------------------------ |
+| Azure CLI authentication               | Successful                                 |
+| Active subscription and tenant context | Verified                                   |
+| Microsoft Graph user query             | Successful                                 |
+| Member and guest identities            | Observed in the returned user data         |
+| Microsoft Graph device query           | Returned an empty collection               |
+| Windows 11 device registration         | Not completed in the available environment |
+
+---
+
+## Skills Demonstrated
+
+* Microsoft Entra ID administration
+* Azure RBAC fundamentals
+* Azure CLI authentication and context validation
+* Microsoft Graph API queries
+* User identity enumeration
+* Member and guest identity investigation
+* Device inventory inspection
+* Evidence-based troubleshooting
+* Security findings documentation
+
+---
+
+## Security Considerations
+
+* Use least-privilege permissions when accessing Azure resources and Microsoft Graph.
+* Verify the active tenant and subscription before performing administrative operations.
+* Review group membership and role assignments regularly.
+* Treat guest accounts as identities that require appropriate access review.
+* Avoid publishing personal email addresses, tenant identifiers, subscription identifiers, user object IDs, access tokens, or other sensitive environment details in public repositories.
+* Interpret empty API results carefully; validate permissions and query scope before drawing conclusions.
+
+---
+
+## Key Learning Points
+
+* Azure CLI can validate the active Azure account context.
+* Microsoft Graph supports programmatic investigation of tenant users and devices.
+* Member and guest identities can be examined through directory data.
+* Azure RBAC, directory identity management, and device registration are distinct areas of the Azure security architecture.
+* API-based investigation complements portal-based administration.
+* Clear documentation should distinguish observed results from assumptions about their causes.
+
+---
+
+## Conclusion
+
+This lab combined Azure Portal administration with Azure CLI and Microsoft Graph queries to investigate identity and access management in Microsoft Entra ID.
+
+The exercise demonstrated authentication validation, user enumeration, member and guest identity analysis, device inventory inspection, and evidence-based documentation of environmental limitations.
+
+It also reinforced the importance of distinguishing directory identity, Azure resource authorisation, and device registration when investigating cloud security configurations.
+
+## AZ-104 Relevance
+
+This lab supports preparation for the Microsoft Azure Administrator (AZ-104) certification by practising identity management, Azure RBAC, Azure CLI, and the investigation of Azure environment configuration.
